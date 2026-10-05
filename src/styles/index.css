@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+  body {
+    @apply bg-slate-100 text-slate-900 font-sans antialiased;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 min-h-touch font-semibold
+      transition-colors disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-blue-700 text-white active:bg-blue-800;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-slate-800 border border-slate-300 active:bg-slate-100;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white active:bg-red-700;
+  }
+  .btn-ghost {
+    @apply btn text-blue-700 active:bg-blue-50;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-slate-200;
+  }
+  .field {
+    @apply w-full rounded-xl border border-slate-300 bg-white px-3 min-h-touch text-base
+      focus:outline-none focus:ring-2 focus:ring-blue-500;
+  }
+  .label {
+    @apply block text-sm font-medium text-slate-600 mb-1;
+  }
+  .chip {
+    @apply inline-flex items-center justify-center rounded-full px-3 min-h-[40px] min-w-[48px] text-sm font-semibold border;
+  }
+  .chip-on {
+    @apply chip bg-blue-700 text-white border-blue-700;
+  }
+  .chip-off {
+    @apply chip bg-white text-slate-700 border-slate-300;
+  }
+}
