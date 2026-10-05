@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { BackupPage } from "./components/backup/BackupPage";
 import { Shell } from "./components/common/Shell";
 import { Home } from "./components/home/Home";
+import { MatchRoute } from "./components/match/MatchRoute";
+import { MatchSetup } from "./components/match/MatchSetup";
 import { SettingsPage } from "./components/settings/SettingsPage";
 import { TeamPage } from "./components/settings/TeamPage";
 import { useRoute } from "./lib/router";
@@ -20,10 +22,13 @@ export default function App() {
   if (!loaded) return <div className="p-8 text-slate-500">Loading…</div>;
 
   const parts = route.split("/").filter(Boolean);
+  // Match screens take the whole display.
+  if (parts[0] === "match" && parts[1] && parts[1] !== "new") return <MatchRoute matchId={parts[1]} />;
   let page;
   if (parts[0] === "teams" && parts[1]) page = <TeamPage teamId={parts[1]} />;
   else if (parts[0] === "settings") page = <SettingsPage tab={parts[1]} />;
   else if (parts[0] === "backup") page = <BackupPage />;
+  else if (parts[0] === "match" && parts[1] === "new") page = <MatchSetup teamId={parts[2]} />;
   else page = <Home />;
 
   return <Shell route={route}>{page}</Shell>;
