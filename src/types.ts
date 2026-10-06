@@ -160,7 +160,11 @@ export interface Match {
   liveButtons: StatButtonId[];
   reviewButtons: StatButtonId[];
   passRatingMode: PassRatingMode;
+  /** Practice matches are labelled and left out of season stats. */
+  practice: boolean;
   status: "in_progress" | "complete";
+  /** The undo step that ended the match, so undo can reopen it. */
+  endedAction: number | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -193,15 +197,27 @@ export interface SetRecord {
   firstServer: TeamSide;
   finalScore: { us: number; them: number } | null;
   winner: TeamSide | null;
+  status: "in_progress" | "complete";
   videos: VideoRef[];
+  /** Undo steps: every user action in a match gets the next number. */
+  createdAction: number;
+  endedAction: number | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
-export type PointReason =
-  | { kind: "stat"; eventId: ID }
-  | { kind: "error"; side: "ours" | "theirs"; subtypeId: ID | null }
-  | null;
+/**
+ * Why a rally ended. Errors are stat events (ours or theirs), so they count in
+ * reports; "earned" means the other side won it with a play we don't track.
+ */
+export type PointReason = { kind: "stat"; eventId: ID } | { kind: "earned" } | null;
+
+export interface RotationInfo {
+  /** Rotations since the set's first serve, 0–5. */
+  index: number;
+  /** The setter's court position, for S1–S6 labels. null if no setter is marked or on court. */
+  setterPosition: CourtPosition | null;
+}
 
 export interface Rally {
   id: ID;
@@ -214,7 +230,12 @@ export interface Rally {
   lineup: Lineup;
   winner: TeamSide | null;
   pointReason: PointReason;
+  rotation: RotationInfo | null;
   startedAt: Timestamp;
+  /** When the point was logged. */
+  endedAt: Timestamp | null;
+  createdAction: number;
+  completedAction: number | null;
 }
 
 interface EventBase {
@@ -226,6 +247,10 @@ interface EventBase {
   videoTime: number | null;
   wallClock: Timestamp;
   source: "live" | "review";
+  /** The undo step this was created in. */
+  step: number;
+  /** Order within the match. */
+  seq: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -252,6 +277,12 @@ export interface LineupChangeEvent extends EventBase {
   courtPosition: CourtPosition | null;
   /** For "correction": the whole lineup after the fix. */
   lineupAfter: Lineup | null;
+  /** For "correction": who serves next, if that was fixed too. */
+  servingAfter: TeamSide | null;
+  /** For "correction": the setter after the fix. undefined = unchanged. */
+  setterAfter?: ID | null;
+  /** Made by the app (libero going back out when she'd rotate to the front row). */
+  auto: boolean;
 }
 
 export type MatchEvent = StatEvent | LineupChangeEvent;

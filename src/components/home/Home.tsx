@@ -8,19 +8,35 @@ import { PageTitle } from "../common/Shell";
 export function Home() {
   const { teams, players, seasons, matches } = useApp();
   const [adding, setAdding] = useState(false);
-  const recent = [...matches].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
+  const recent = [...matches].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)).slice(0, 10);
+  const live = matches.filter((m) => m.status === "in_progress");
   const teamName = (id: string) => teams.find((t) => t.id === id)?.name ?? "";
 
   return (
     <>
       <BackupStatus />
+      {live.map((m) => (
+        <button
+          key={m.id}
+          className="w-full rounded-2xl bg-green-700 text-white p-4 mb-4 flex items-center justify-between text-left active:bg-green-800"
+          onClick={() => navigate(`/match/${m.id}`)}
+        >
+          <span>
+            <span className="block text-sm opacity-80">In progress{m.practice ? " · practice" : ""}</span>
+            <span className="text-xl font-bold">
+              {teamName(m.teamId)} vs {m.opponent}
+            </span>
+          </span>
+          <span className="text-lg font-bold">Resume ›</span>
+        </button>
+      ))}
       <PageTitle
         actions={
           <>
             <button className="btn-secondary" onClick={() => setAdding(true)}>
               Add team
             </button>
-            <button className="btn-primary" disabled title="Comes in the next build">
+            <button className="btn-primary" disabled={teams.length === 0} onClick={() => navigate("/match/new")}>
               Start a match
             </button>
           </>
@@ -55,16 +71,20 @@ export function Home() {
 
       <h2 className="text-xl font-bold mt-8 mb-3">Recent matches</h2>
       {recent.length === 0 ? (
-        <p className="text-slate-500">No matches yet. Match tracking arrives in the next build.</p>
+        <p className="text-slate-500">No matches yet. Tap Start a match. Turn on “Practice match” to try it out without it counting.</p>
       ) : (
         <div className="card divide-y">
           {recent.map((m) => (
-            <div key={m.id} className="p-4 flex justify-between">
+            <button key={m.id} className="w-full p-4 flex justify-between items-center text-left active:bg-slate-50" onClick={() => navigate(`/match/${m.id}`)}>
               <span>
-                {teamName(m.teamId)} vs {m.opponent}
+                <span className="font-semibold">
+                  {teamName(m.teamId)} vs {m.opponent}
+                </span>
+                {m.practice && <span className="ml-2 text-xs font-bold uppercase text-amber-700">Practice</span>}
+                {m.status === "in_progress" && <span className="ml-2 text-xs font-bold uppercase text-green-700">In progress</span>}
               </span>
-              <span className="text-slate-500">{m.date}</span>
-            </div>
+              <span className="text-slate-500">{m.date} ›</span>
+            </button>
           ))}
         </div>
       )}

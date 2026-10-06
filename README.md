@@ -14,7 +14,9 @@ Built in phases, each tested on the iPad before the next starts.
 
 - [x] **1. Data and setup**: teams, seasons, rosters, match-format defaults,
       stat layouts, error types, custom stats, preferences, backup and restore
-- [ ] 2. Live screen
+- [x] **2. Live screen**: match setup (including practice matches), lineup,
+      scoring, automatic rotation, subs, libero, multi-step undo, set and
+      match end, end-of-match backup prompt
 - [ ] 3. Review screen (video)
 - [ ] 4. Reports, PDF and CSV
 - [ ] 5. Offline install (home screen, airplane mode)
@@ -46,9 +48,12 @@ npm run build
 React + TypeScript + Vite + Tailwind, with `idb` over IndexedDB and `zustand`
 for state. Every dependency is bundled at build time.
 
-`src/types.ts` is the stored data model. It already holds rallies, every
-contact and lineup changes; the screens that fill them in come in later
-phases.
+`src/types.ts` is the stored data model. `src/lib/engine.ts` is the match
+engine: pure functions that turn taps into writes. The score, server and
+who's on court are never stored; they're replayed from the rallies and
+lineup events, so undo just removes the most recent action. Every user action
+gets the next number, and anything one tap created (a kill, its point, the
+libero going out after the rotation) shares that number and is undone together.
 
 Pushes to `main` run the tests and deploy to GitHub Pages
 (`.github/workflows/deploy.yml`). Pull requests run the tests only.

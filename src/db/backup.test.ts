@@ -23,20 +23,22 @@ async function seed() {
   const match: Match = {
     id: "m1", teamId: team.id, seasonId: season.id, opponent: "Rivals", date: "2026-10-04", location: "Gym",
     event: "", format: team.defaultFormat, liberoIds: [], liveButtons: ["attack_kill"], reviewButtons: [],
-    passRatingMode: "optional", status: "complete", createdAt: t, updatedAt: t,
+    passRatingMode: "optional", practice: false, status: "complete", endedAction: 5, createdAt: t, updatedAt: t,
   };
   const set: SetRecord = {
     id: "s1", matchId: "m1", number: 1, startingLineup: [ava.id, null, null, null, null, null], setterId: null,
-    firstServer: "us", finalScore: { us: 25, them: 20 }, winner: "us", videos: [], createdAt: t, updatedAt: t,
+    firstServer: "us", finalScore: { us: 25, them: 20 }, winner: "us", status: "complete", videos: [],
+    createdAction: 1, endedAction: 4, createdAt: t, updatedAt: t,
   };
   const rally: Rally = {
     id: "r1", matchId: "m1", setId: "s1", number: 1, servingTeam: "us", scoreBefore: { us: 0, them: 0 },
-    lineup: set.startingLineup, winner: "us", pointReason: { kind: "stat", eventId: "e1" }, startedAt: t,
+    lineup: set.startingLineup, winner: "us", pointReason: { kind: "stat", eventId: "e1" },
+    rotation: { index: 0, setterPosition: null }, startedAt: t, endedAt: t, createdAction: 2, completedAction: 2,
   };
   const event: MatchEvent = {
     id: "e1", matchId: "m1", setId: "s1", rallyId: "r1", type: "stat", team: "us", playerId: ava.id,
     action: "attack", outcome: "kill", passRating: null, errorSubtypeId: null, customStatId: null,
-    videoTime: null, wallClock: t, source: "live", createdAt: t, updatedAt: t,
+    videoTime: null, wallClock: t, source: "live", step: 2, seq: 1, createdAt: t, updatedAt: t,
   };
   const db = await getDb();
   await db.put("matches", match);

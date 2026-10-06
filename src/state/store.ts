@@ -33,6 +33,11 @@ interface AppState {
   updatePlayer(player: Player): Promise<void>;
   deletePlayer(id: ID): Promise<void>;
 
+  createMatch(match: Match): Promise<void>;
+  /** Keeps the Home list in step with a match changed elsewhere (the live screen). */
+  upsertMatchLocal(match: Match): void;
+  deleteMatch(id: ID): Promise<void>;
+
   updateSettings(patch: Partial<Settings>): Promise<void>;
   markBackedUp(at?: string): Promise<void>;
 }
@@ -146,6 +151,21 @@ export const useApp = create<AppState>((set, get) => ({
   async deletePlayer(id) {
     await db.deletePlayer(id);
     set({ players: get().players.filter((p) => p.id !== id) });
+  },
+
+  async createMatch(match) {
+    set({ matches: [...get().matches, match] });
+    await db.putMatch(match);
+  },
+
+  upsertMatchLocal(match) {
+    const list = get().matches;
+    set({ matches: list.some((m) => m.id === match.id) ? list.map((m) => (m.id === match.id ? match : m)) : [...list, match] });
+  },
+
+  async deleteMatch(id) {
+    set({ matches: get().matches.filter((m) => m.id !== id) });
+    await db.deleteMatchCascade(id);
   },
 
   async updateSettings(patch) {

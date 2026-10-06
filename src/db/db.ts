@@ -1,5 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import { defaultSettings } from "../lib/catalog";
+import type { MatchData, Mutation } from "../lib/engine";
 import type {
   ID,
   Match,
@@ -222,4 +223,49 @@ export async function requestPersistence(): Promise<boolean | null> {
   } catch {
     return null;
   }
+}
+
+// ---------------------------------------------------------------- matches
+
+
+export async function loadMatchData(matchId: ID): Promise<MatchData | null> {
+  const db = await getDb();
+  const tx = db.transaction(["matches", "sets", "rallies", "events"], "readonly");
+  const [match, sets, rallies, events] = await Promise.all([
+    tx.objectStore("matches").get(matchId),
+    tx.objectStore("sets").index("matchId").getAll(matchId),
+    tx.objectStore("rallies").index("matchId").getAll(matchId),
+    tx.objectStore("events").index("matchId").getAll(matchId),
+  ]);
+  await tx.done;
+  return match ? { match, sets, rallies, events } : null;
+}
+
+/** Writes one action's changes in a single transaction: all of it lands or none does. */
+export async function writeMutation(m: Mutation): Promise<void> {
+  const db = await getDb();
+  const tx = db.transaction(["matches", "sets", "rallies", "events"], "readwrite");
+  for (const x of m.put.matches) await tx.objectStore("matches").put(x);
+  for (const x of m.put.sets) await tx.objectStore("sets").put(x);
+  for (const x of m.put.rallies) await tx.objectStore("rallies").put(x);
+  for (const x of m.put.events) await tx.objectStore("events").put(x);
+  for (const id of m.del.sets) await tx.objectStore("sets").delete(id);
+  for (const id of m.del.rallies) await tx.objectStore("rallies").delete(id);
+  for (const id of m.del.events) await tx.objectStore("events").delete(id);
+  await tx.done;
+}
+
+export async function putMatch(m: Match): Promise<void> {
+  await (await getDb()).put("matches", m);
+}
+
+export async function deleteMatchCascade(matchId: ID): Promise<void> {
+  const db = await getDb();
+  const tx = db.transaction(["matches", "sets", "rallies", "events"], "readwrite");
+  for (const store of ["sets", "rallies", "events"] as const) {
+    const keys = await tx.objectStore(store).index("matchId").getAllKeys(matchId);
+    for (const k of keys) await tx.objectStore(store).delete(k);
+  }
+  await tx.objectStore("matches").delete(matchId);
+  await tx.done;
 }
